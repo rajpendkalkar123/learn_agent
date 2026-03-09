@@ -2,14 +2,39 @@
 
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Sparkles, Github, Code2, GitBranch } from "lucide-react";
+import { Sparkles, Github, Code2, GitBranch, User, BarChart3 } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 export default function Home() {
   const router = useRouter();
+  const { data: session } = useSession();
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 flex items-center justify-center p-4">
-      <div className="max-w-6xl w-full">
+    <main className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 flex flex-col p-4">
+      {/* Header */}
+      {session && (
+        <div className="max-w-6xl w-full mx-auto mb-8">
+          <div className="flex items-center justify-end gap-4">
+            <button
+              onClick={() => router.push("/dashboard")}
+              className="px-4 py-2 bg-slate-800/50 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors flex items-center gap-2"
+            >
+              <BarChart3 className="w-4 h-4" />
+              Dashboard
+            </button>
+            <button
+              onClick={() => router.push("/profile")}
+              className="px-4 py-2 bg-slate-800/50 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors flex items-center gap-2"
+            >
+              <User className="w-4 h-4" />
+              Profile
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="flex-1 flex items-center justify-center">
+        <div className="max-w-6xl w-full"
         {/* Hero Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

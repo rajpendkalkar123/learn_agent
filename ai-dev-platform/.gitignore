@@ -28,6 +28,7 @@ yarn-error.log*
 # local env files
 .env*.local
 .env
+.env.production
 
 # vercel
 .vercel
@@ -35,3 +36,16 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# AWS Infrastructure & Deployment (exclude from frontend deployment)
+aws-infrastructure/
+lambda/
+scripts/
+deployment-outputs.json
+
+# Documentation files (exclude from deployment)
+PRODUCTION_*.md
+AWS_SETUP.md
+FEATURES_COMPLETED.md
+DEPLOYMENT.md
+README.prod.md

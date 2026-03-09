@@ -10,6 +10,7 @@ import {
   AlertCircle,
   CheckCircle,
 } from "lucide-react";
+import FeedbackWidget from "../FeedbackWidget";
 
 export default function RightPanel() {
   const { selectedModule, currentProject, addModule, updateModule } =
@@ -51,22 +52,47 @@ export default function RightPanel() {
   };
 
   const handleSendMessage = async () => {
-    if (!message.trim()) return;
+    if (!message.trim() || !currentProject?.id) return;
 
     const userMessage = message;
     setMessage("");
     setChatHistory([...chatHistory, { role: "user", content: userMessage }]);
 
-    // TODO: Implement AI chat
-    setTimeout(() => {
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectId: currentProject.id,
+          question: userMessage,
+          context: {
+            currentModule: selectedModule?.name,
+            moduleId: selectedModule?.id,
+          },
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setChatHistory((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: data.message.content,
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
       setChatHistory((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: "AI assistant response will appear here.",
+          content: "Sorry, I encountered an error. Please try again.",
         },
       ]);
-    }, 1000);
+    }
   };
 
   return (
@@ -148,15 +174,27 @@ export default function RightPanel() {
           </div>
         ) : (
           chatHistory.map((msg, idx) => (
-            <div
-              key={idx}
-              className={`p-3 rounded-lg ${
-                msg.role === "user"
-                  ? "bg-blue-500/20 ml-4"
-                  : "bg-slate-800/50 mr-4"
-              }`}
-            >
-              <p className="text-sm text-slate-300">{msg.content}</p>
+            <div key={idx}>
+              <div
+                className={`p-3 rounded-lg ${
+                  msg.role === "user"
+                    ? "bg-blue-500/20 ml-4"
+                    : "bg-slate-800/50 mr-4"
+                }`}
+              >
+                <p className="text-sm text-slate-300">{msg.content}</p>
+              </div>
+              {msg.role === "assistant" && (
+                <div className="mr-4 mt-2 flex justify-end">
+                  <FeedbackWidget
+                    projectId={currentProject?.id}
+                    moduleId={selectedModule?.id}
+                    category="explanation"
+                    context={{ question: chatHistory[idx - 1]?.content, answer: msg.content }}
+                    inline={true}
+                  />
+                </div>
+              )}
             </div>
           ))
         )}

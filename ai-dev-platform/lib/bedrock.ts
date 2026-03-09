@@ -2,14 +2,20 @@ import {
   BedrockRuntimeClient,
   InvokeModelCommand,
 } from "@aws-sdk/client-bedrock-runtime";
+import { generateMockArchitecture, generateMockModuleCode } from "./mock-data";
 
-const client = new BedrockRuntimeClient({
-  region: process.env.AWS_REGION || "us-east-1",
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
-  },
-});
+// Check if we're in demo mode (no AWS credentials)
+const isDemoMode = !process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY;
+
+const client = isDemoMode
+  ? null
+  : new BedrockRuntimeClient({
+      region: process.env.AWS_REGION || "us-east-1",
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+      },
+    });
 
 export interface BedrockMessage {
   role: "user" | "assistant";
@@ -20,6 +26,13 @@ export async function invokeBedrockModel(
   messages: BedrockMessage[],
   systemPrompt?: string
 ): Promise<string> {
+  if (isDemoMode) {
+    console.log("🎭 Demo Mode: Simulating AI response");
+    // In demo mode, return a mock response
+    await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate API delay
+    return "Demo mode active - AWS Bedrock not configured";
+  }
+
   const modelId = process.env.BEDROCK_MODEL_ID || "anthropic.claude-3-5-sonnet-20241022-v2:0";
 
   const payload = {
@@ -40,7 +53,7 @@ export async function invokeBedrockModel(
   });
 
   try {
-    const response = await client.send(command);
+    const response = await client!.send(command);
     const responseBody = JSON.parse(new TextDecoder().decode(response.body));
     return responseBody.content[0].text;
   } catch (error) {
@@ -50,6 +63,12 @@ export async function invokeBedrockModel(
 }
 
 export async function generateArchitecture(projectIdea: string) {
+  if (isDemoMode) {
+    console.log("🎭 Demo Mode: Generating mock architecture");
+    await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulate processing time
+    return generateMockArchitecture(projectIdea);
+  }
+
   const systemPrompt = `You are an expert software architect. Given a project idea, generate a comprehensive architecture breakdown in JSON format.
 
 The response should include:
@@ -112,6 +131,22 @@ export async function generateModuleCode(
   dependencies: string[],
   techStack: string[]
 ) {
+  if (isDemoMode) {
+    console.log("🎭 Demo Mode: Generating mock module code");
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    return {
+      files: [
+        {
+          id: `${moduleName}-main`,
+          name: `${moduleName}.tsx`,
+          path: `src/modules/${moduleName}/${moduleName}.tsx`,
+          content: generateMockModuleCode(moduleName, moduleDescription),
+          type: "file",
+        },
+      ],
+    };
+  }
+
   const systemPrompt = `You are an expert software developer. Generate production-ready code for a specific module.
 
 Return ONLY valid JSON with this structure:
@@ -150,6 +185,12 @@ Include all necessary files with complete, production-ready code.`,
 }
 
 export async function analyzeRepository(repoUrl: string) {
+  if (isDemoMode) {
+    console.log("🎭 Demo Mode: Generating mock repository analysis");
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    return generateMockArchitecture(`Analyze repository: ${repoUrl}`);
+  }
+
   const systemPrompt = `You are an expert code analyst. Analyze a repository and generate an architecture map.
 
 Return ONLY valid JSON with the same structure as generateArchitecture.`;

@@ -12,7 +12,7 @@ import BottomPanel from "@/components/workspace/BottomPanel";
 export default function WorkspacePage() {
   const params = useParams();
   const projectId = params.id as string;
-  const { currentProject, setCurrentProject, isGraphVisible } = useProjectStore();
+  const { currentProject, setCurrentProject, isGraphVisible, modules, addModule, setGraphNodes, setGraphEdges } = useProjectStore();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -22,6 +22,44 @@ export default function WorkspacePage() {
         const response = await fetch(`/api/projects/${projectId}`);
         const data = await response.json();
         setCurrentProject(data);
+        
+        // Load modules into store
+        if (data.architecture?.modules) {
+          data.architecture.modules.forEach((module: any) => {
+            if (!modules.find(m => m.id === module.id)) {
+              addModule(module);
+            }
+          });
+        }
+
+        // Load graph nodes and edges
+        if (data.architecture?.modules) {
+          const nodes = data.architecture.modules.map((module: any, index: number) => ({
+            id: module.id,
+            type: "module",
+            data: {
+              label: module.name,
+              description: module.description,
+              status: module.status || "pending",
+            },
+            position: { x: (index % 3) * 300, y: Math.floor(index / 3) * 200 },
+          }));
+
+          const edges: any[] = [];
+          data.architecture.modules.forEach((module: any) => {
+            module.dependencies?.forEach((depId: string) => {
+              edges.push({
+                id: `${depId}-${module.id}`,
+                source: depId,
+                target: module.id,
+                type: "smoothstep",
+              });
+            });
+          });
+
+          setGraphNodes(nodes);
+          setGraphEdges(edges);
+        }
       } catch (error) {
         console.error("Error fetching project:", error);
       } finally {
@@ -30,7 +68,7 @@ export default function WorkspacePage() {
     };
 
     fetchProject();
-  }, [projectId, setCurrentProject]);
+  }, [projectId]);
 
   if (isLoading) {
     return (

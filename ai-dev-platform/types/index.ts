@@ -87,3 +87,114 @@ export interface FunctionDetail {
   connectedServices: string[];
   code?: string;
 }
+
+// Learning Path Types
+export interface LearningPath {
+  id: string;
+  projectId: string;
+  name: string;
+  description: string;
+  modules: LearningModule[];
+  knowledgeLevel: "beginner" | "intermediate" | "advanced";
+  createdAt: string;
+  estimatedDuration: number; // in minutes
+}
+
+export interface LearningModule {
+  id: string;
+  title: string;
+  description: string;
+  content: string;
+  order: number;
+  duration: number; // in minutes
+  type: "concept" | "implementation" | "architecture" | "checkpoint";
+  prerequisites: string[]; // IDs of prerequisite modules
+  resources: LearningResource[];
+  checkpoint?: Checkpoint;
+  completed?: boolean;
+  completedAt?: string;
+}
+
+export interface LearningResource {
+  title: string;
+  type: "documentation" | "example" | "video" | "article";
+  url?: string;
+  content?: string;
+}
+
+export interface Checkpoint {
+  id: string;
+  questions: CheckpointQuestion[];
+  passingScore: number;
+}
+
+export interface CheckpointQuestion {
+  id: string;
+  question: string;
+  type: "multiple-choice" | "code" | "true-false";
+  options?: string[];
+  correctAnswer: string;
+  explanation: string;
+}
+
+export interface UserProgress {
+  userId: string;
+  projectId: string;
+  learningPathId: string;
+  completedModules: string[];
+  currentModule?: string;
+  checkpointScores: Record<string, number>;
+  totalTimeSpent: number; // in minutes
+  startedAt: string;
+  lastActivityAt: string;
+  completionPercentage: number;
+}
+
+// Impact Analysis Types
+export interface ImpactAnalysis {
+  moduleId: string;
+  changeDescription: string;
+  directImpacts: ModuleImpact[];
+  indirectImpacts: ModuleImpact[];
+  potentialBreakingChanges: BreakingChange[];
+  recommendations: string[];
+  riskLevel: "low" | "medium" | "high";
+}
+
+export interface ModuleImpact {
+  moduleId: string;
+  moduleName: string;
+  impactType: "direct" | "indirect";
+  reason: string;
+  affectedFunctions: string[];
+  severity: "low" | "medium" | "high";
+}
+
+export interface BreakingChange {
+  type: string;
+  description: string;
+  affectedModules: string[];
+  mitigation: string;
+}
+
+// Conversation Types
+export interface Conversation {
+  id: string;
+  projectId: string;
+  userId: string;
+  messages: Message[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Message {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: string;
+  metadata?: {
+    moduleId?: string;
+    codeSnippet?: string;
+    references?: string[];
+  };
+}
